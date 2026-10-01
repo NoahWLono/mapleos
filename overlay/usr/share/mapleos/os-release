@@ -1,0 +1,9 @@
+NAME="MapleOS"
+PRETTY_NAME="MapleOS 0.1.0 Alpha 1 (Arch Linux based)"
+ID=mapleos
+ID_LIKE=arch
+VERSION="0.1.0-alpha.1"
+VERSION_ID="0.1.0-alpha.1"
+BUILD_ID=rolling
+ANSI_COLOR="38;2;224;167;105"
+HOME_URL="https://github.com/NoahWLono/mapleos"

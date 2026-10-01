@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "momiji": {
+    "url": "https://github.com/NoahWLono/momiji-dots.git",
+    "commit": "654d2ddf4c45dd40afece7a52b4b93f4e7445d63"
+  },
+  "import_allowlist": {
+    "wallpapers/maple.png": "usr/share/backgrounds/mapleos/maple.png",
+    "rice/fastfetch/maple-ascii.txt": "usr/share/mapleos/maple-ascii.txt",
+    "home/caelestia/hypr-user.lua": "usr/share/mapleos/integrations/caelestia/hypr-user.lua",
+    "home/caelestia/hypr-vars.lua": "usr/share/mapleos/integrations/caelestia/hypr-vars.lua"
+  },
+  "excluded": [
+    "host /etc",
+    "SSH keys and configuration",
+    "Wi-Fi/VPN profiles",
+    "browser profiles",
+    "account tokens",
+    "hardware overrides",
+    "disk UUIDs",
+    "third-party application binaries",
+    "unreviewed AUR scripts"
+  ],
+  "arch_packages": "rolling; exact resolved versions are captured per build, not reproducible by this lock alone"
+}

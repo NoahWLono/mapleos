@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Welcome to MapleOS
+Exec=firefox /usr/share/mapleos/welcome/index.html
+Icon=help-browser
+Terminal=false
+Categories=Utility;

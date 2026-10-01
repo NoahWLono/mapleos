@@ -1,0 +1,9 @@
+[SddmGreeterTheme]
+Name=MapleOS
+Description=MapleOS original login theme
+Author=MapleOS contributors
+Version=0.1.0
+MainScript=Main.qml
+Theme-Id=mapleos
+Theme-API=2.0
+QtVersion=6

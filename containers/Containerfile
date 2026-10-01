@@ -1,0 +1,11 @@
+# Build this separately as a REGULAR USER after installation. Not inside the ISO.
+# Supply a digest-pinned Arch base; the build intentionally needs network access.
+ARG BASE
+FROM ${BASE}
+RUN pacman -Syu --noconfirm --needed base-devel python nodejs npm git bash fish ripgrep fd jq curl \
+    && pacman -Scc --noconfirm
+# Optional agent installation is explicit and version-pinned by the operator.
+ARG CODEX_VERSION
+RUN test -z "$CODEX_VERSION" || npm install -g "@openai/codex@${CODEX_VERSION}"
+WORKDIR /workspace
+CMD ["bash"]

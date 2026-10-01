@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Preserve Arch's /usr/lib/os-release. Restore only our own /etc symlink.
+/usr/lib/mapleos/apply-branding
+install -d /etc/systemd/system/multi-user.target.wants
+ln -sfn /usr/lib/systemd/system/NetworkManager.service /etc/systemd/system/multi-user.target.wants/NetworkManager.service
+ln -sfn /usr/lib/systemd/system/systemd-resolved.service /etc/systemd/system/multi-user.target.wants/systemd-resolved.service
+ln -sfn /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+ln -sfn /usr/lib/systemd/system/sddm.service /etc/systemd/system/display-manager.service
+ln -sfn /usr/lib/systemd/system/graphical.target /etc/systemd/system/default.target
+# Remote access is opt-in, even though the SSH client is included.
+ln -sfn /dev/null /etc/systemd/system/sshd.service
+ln -sfn /dev/null /etc/systemd/system/sshd.socket

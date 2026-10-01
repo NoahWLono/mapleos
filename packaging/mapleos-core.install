@@ -1,0 +1,6 @@
+post_install() {
+  /usr/lib/mapleos/setup-system
+}
+post_upgrade() {
+  /usr/lib/mapleos/apply-branding
+}

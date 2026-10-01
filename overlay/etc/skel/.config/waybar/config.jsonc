@@ -1,0 +1,30 @@
+{
+  "layer": "top",
+  "height": 34,
+  "modules-left": [
+    "hyprland/workspaces"
+  ],
+  "modules-center": [
+    "custom/maple"
+  ],
+  "modules-right": [
+    "pulseaudio",
+    "network",
+    "battery",
+    "clock"
+  ],
+  "custom/maple": {
+    "format": "\ud83c\udf41 MapleOS  \u00b7  AI workbench",
+    "on-click": "foot -e maple workbench",
+    "tooltip-format": "Super+A opens the AI workbench"
+  },
+  "clock": {
+    "format": "{:%a %d %b  %H:%M}"
+  },
+  "network": {
+    "format-wifi": "Wi-Fi {signalStrength}%",
+    "format-ethernet": "Ethernet",
+    "format-disconnected": "Offline",
+    "on-click": "nm-connection-editor"
+  }
+}

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Preserve Arch's vendor identity file; select the downstream identity in /etc.
+ln -sfn /usr/share/mapleos/os-release /etc/os-release

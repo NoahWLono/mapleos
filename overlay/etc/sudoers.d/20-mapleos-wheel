@@ -1,0 +1,2 @@
+# Normal authenticated administrative access. No agent-specific sudo exemption.
+%wheel ALL=(ALL:ALL) ALL

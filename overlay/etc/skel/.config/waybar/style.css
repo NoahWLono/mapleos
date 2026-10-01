@@ -1,0 +1,6 @@
+* { font-family: "Noto Sans", sans-serif; font-size: 13px; border: none; }
+window#waybar { background: rgba(23, 26, 32, 0.94); color: #e8e2d9; }
+#workspaces button { color: #aaa69f; padding: 0 9px; }
+#workspaces button.active { color: #e0b876; border-bottom: 2px solid #e0b876; }
+#custom-maple { color: #e0b876; font-weight: bold; }
+#pulseaudio, #network, #battery, #clock { padding: 0 12px; }

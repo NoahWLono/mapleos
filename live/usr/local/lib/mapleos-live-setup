@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[[ -e /etc/mapleos-live ]] || exit 0
+if ! id maple >/dev/null 2>&1; then
+    useradd --create-home --uid 1000 --groups wheel --shell /usr/bin/fish maple
+    printf 'maple:maple\n' | chpasswd
+    if ! grep -q '^maple:' /etc/subuid 2>/dev/null; then
+        usermod --add-subuids 100000-165535 maple
+    fi
+    if ! grep -q '^maple:' /etc/subgid 2>/dev/null; then
+        usermod --add-subgids 100000-165535 maple
+    fi
+fi
+passwd --lock root >/dev/null
+/usr/lib/mapleos/setup-system

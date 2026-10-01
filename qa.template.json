@@ -1,0 +1,16 @@
+{
+  "iso_sha256": "REPLACE_AFTER_BUILD",
+  "source_tree_sha256": "FROM_BUILD_MANIFEST",
+  "reviewer": "",
+  "reviewed_utc": "",
+  "checks": {
+    "graphical_login": false,
+    "terminal_and_keybinds": false,
+    "network_and_audio": false,
+    "installed_system_reboot": false,
+    "unique_installed_credentials": false,
+    "agent_readonly_and_network_isolation": false,
+    "redistribution_review": false
+  },
+  "notes": "Do not turn checks true without performing and recording the test."
+}

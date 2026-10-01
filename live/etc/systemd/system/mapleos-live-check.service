@@ -1,0 +1,12 @@
+[Unit]
+Description=MapleOS live boot sanity marker (not graphical QA)
+After=mapleos-live-setup.service
+Requires=mapleos-live-setup.service
+ConditionPathExists=/etc/mapleos-live
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/mapleos-live-check
+
+[Install]
+WantedBy=multi-user.target

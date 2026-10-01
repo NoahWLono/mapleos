@@ -1,0 +1,27 @@
+{
+  "logo": {
+    "type": "file",
+    "source": "/usr/share/mapleos/maple-ascii.txt",
+    "color": {
+      "1": "yellow",
+      "2": "red",
+      "3": "green",
+      "4": "white"
+    }
+  },
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "kernel",
+    "uptime",
+    "wm",
+    "terminal",
+    "shell",
+    "cpu",
+    "memory",
+    "disk",
+    "break",
+    "colors"
+  ]
+}

@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""Finish an explicitly mounted fresh Arch install. Never formats a block device."""
+from __future__ import annotations
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import tempfile
+
+def safe_target(root: Path, absolute: str) -> Path:
+    if not absolute.startswith('/') or '..' in Path(absolute).parts:
+        raise ValueError('Invalid target path')
+    path=root/absolute.lstrip('/')
+    resolved=path.resolve()
+    if not resolved.is_relative_to(root):
+        raise ValueError('Target contains a symlink escaping the mounted installation')
+    return path
+
+def main() -> int:
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('target',type=Path); p.add_argument('username'); p.add_argument('--confirm-new-install',action='store_true')
+    a=p.parse_args()
+    if os.geteuid()!=0 or not Path('/etc/mapleos-live').is_file(): p.error('Run from the MapleOS live session with sudo')
+    if not a.confirm_new_install: p.error('Read the installation guide, then explicitly use --confirm-new-install')
+    target=a.target.resolve(strict=True)
+    if target in (Path('/'),Path('/home'),Path('/root')) or a.target.absolute()!=target: p.error('Use a real, separate installation mountpoint')
+    info=json.loads(subprocess.check_output(['findmnt','--json','--mountpoint',str(target),'-o','TARGET,FSTYPE,SOURCE'],text=True))
+    mounts=info.get('filesystems',[])
+    if len(mounts)!=1 or mounts[0].get('fstype') not in ('ext4','btrfs','xfs'): p.error('Target must be its own mounted ext4, btrfs or XFS filesystem')
+    if (target/'etc/mapleos-live').exists(): p.error('Refusing to customize a live image as an installed system')
+    # /etc/os-release may be an absolute symlink. Read the real Arch vendor file.
+    release=safe_target(target,'/usr/lib/os-release').read_text()
+    if not re.search(r'^ID=["\']?arch["\']?$',release,re.M): p.error('Target is not a fresh Arch Linux installation')
+    if not re.fullmatch(r'[a-z_][a-z0-9_-]{0,31}',a.username): p.error('Invalid username')
+    records=[line.split(':') for line in safe_target(target,'/etc/passwd').read_text().splitlines()]
+    found=[r for r in records if r[0]==a.username and len(r)==7]
+    if len(found)!=1: p.error('Create your regular user in archinstall first')
+    user=found[0]; uid,gid=int(user[2]),int(user[3])
+    if uid<1000 or uid==65534: p.error('Not a regular user')
+    shadows=[r.split(':') for r in safe_target(target,'/etc/shadow').read_text().splitlines() if r.split(':',1)[0]==a.username]
+    if not shadows or not shadows[0][1] or shadows[0][1][0] in '!*': p.error('Set a unique installed-user password in archinstall first')
+    home=safe_target(target,user[5])
+    if not home.is_dir(): p.error('Target user home is absent')
+    if (home/'.config').is_symlink(): p.error('Refusing a symlinked configuration directory')
+    # The customization is for a fresh account. Refuse to overwrite an existing rice.
+    for name in ('.config/hypr','.config/fish','.config/waybar','.config/foot'):
+        if (home/name).exists(): p.error('Existing desktop configuration found; this helper will not overwrite it')
+    pkgs=list(Path('/opt/mapleos-pkgs').glob('mapleos-core-*.pkg.tar.zst'))
+    if len(pkgs)!=1: p.error('Expected one bundled MapleOS package')
+    pkg=pkgs[0]
+    expected=json.loads((pkg.parent/'checksums.json').read_text()).get(pkg.name)
+    with pkg.open('rb') as f: actual=hashlib.file_digest(f,'sha256').hexdigest()
+    if expected!=actual: p.error('Bundled package checksum failed')
+    print(f'Target: {target} ({mounts[0]["source"]}); existing user: {a.username}')
+    print('This installs packages and MapleOS settings. It does not partition, format, create a user, or set a password.')
+    staging=Path(tempfile.mkdtemp(prefix='mapleos-',dir=safe_target(target,'/tmp')))
+    try:
+        shutil.copy2(pkg,staging/pkg.name)
+        def chroot(*cmd: str) -> None:
+            subprocess.run(['arch-chroot',str(target),*cmd],check=True)
+        chroot('pacman','-Syu','--noconfirm')
+        chroot('pacman','-U','--noconfirm','/tmp/'+staging.name+'/'+pkg.name)
+        skeleton=safe_target(target,'/etc/skel')
+        # Copy only previously absent skeleton files, and only chown what we copy.
+        for src in sorted(skeleton.rglob('*')):
+            relative=src.relative_to(skeleton); dst=home/relative
+            if not dst.resolve().is_relative_to(home.resolve()): raise ValueError('Skeleton destination escapes the selected home')
+            if src.is_symlink(): continue
+            if dst.exists(): continue
+            if src.is_dir(): dst.mkdir(parents=True,exist_ok=True)
+            else: dst.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(src,dst)
+            os.chown(dst,uid,gid)
+        chroot('usermod','--append','--groups','wheel','--shell','/usr/bin/fish',a.username)
+        subuid=safe_target(target,'/etc/subuid')
+        existing=subuid.read_text() if subuid.exists() else ''
+        if not any(line.startswith(a.username+':') for line in existing.splitlines()):
+            # Avoid overlapping other users' namespace ranges.
+            subgid=safe_target(target,'/etc/subgid')
+            gid_ranges=subgid.read_text() if subgid.exists() else ''
+            starts=[int(line.split(':')[1])+int(line.split(':')[2]) for line in (existing+'\n'+gid_ranges).splitlines() if len(line.split(':'))==3]
+            first=max([100000]+starts); last=first+65535
+            chroot('usermod','--add-subuids',f'{first}-{last}','--add-subgids',f'{first}-{last}',a.username)
+        chroot('/usr/lib/mapleos/setup-system')
+        print('MapleOS installed. Check bootloader/encryption configuration before unmounting and rebooting.')
+        print('No live password, live account database, SSH host keys, or machine ID was copied.')
+    finally:
+        shutil.rmtree(staging)
+    return 0
+if __name__=='__main__':
+    try: raise SystemExit(main())
+    except (ValueError,OSError,subprocess.CalledProcessError) as exc: raise SystemExit(f'maple-finish-install: {exc}')

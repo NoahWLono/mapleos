@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+for command in maple Hyprland fish podman firefox; do command -v "$command" >/dev/null; done
+id maple >/dev/null
+[[ -f /usr/share/backgrounds/mapleos/maple.png ]]
+[[ -f /etc/mapleos-live ]]
+[[ $(readlink /etc/systemd/system/sshd.service) == /dev/null ]]
+/usr/bin/maple --version
+marker='MAPLEOS_LIVE_BOOT_OK:0.1.0-alpha.1'
+printf '%s\n' "$marker"
+# Deliberately no user identifiers, host information, or credentials on serial.
+if [[ -c /dev/ttyS0 ]]; then printf '%s\n' "$marker" >/dev/ttyS0 || true; fi

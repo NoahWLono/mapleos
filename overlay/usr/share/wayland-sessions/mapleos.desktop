@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=MapleOS (Hyprland)
+Comment=MapleOS Core desktop
+Exec=dbus-run-session Hyprland
+Type=Application
+DesktopNames=Hyprland

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Maple AI Workbench
+Comment=Project-scoped agents, explicit permissions
+Exec=foot -e maple workbench
+Icon=utilities-terminal
+Terminal=false
+Categories=Development;Utility;

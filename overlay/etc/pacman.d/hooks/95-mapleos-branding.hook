@@ -1,0 +1,11 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = filesystem
+Target = mapleos-core
+
+[Action]
+Description = Applying MapleOS branding
+When = PostTransaction
+Exec = /usr/lib/mapleos/apply-branding

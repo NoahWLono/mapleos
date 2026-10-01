@@ -1,0 +1,5 @@
+# NOT installed automatically. The source recipe deliberately does not execute
+# AUR recipes as root or silently replace stable packages with -git builds.
+caelestia-cli
+caelestia-shell
+# Full Caelestia parity requires recipe/dependency review and visual QA.
