@@ -174,6 +174,50 @@ class Sources(unittest.TestCase):
             self.assertEqual((live/'etc/machine-id').read_bytes(),b'')
             self.assertIn('SigLevel = Required DatabaseOptional',(out/'pacman.conf').read_text())
             subprocess.run(['bash','-n',str(out/'profiledef.sh')],check=True)
+    def test_profile_preserves_pacman_keyring_init(self):
+        with tempfile.TemporaryDirectory() as td:
+            base=Path(td)
+            up=base/"up"
+            system=up/"airootfs/etc/systemd/system"
+            wants=system/"multi-user.target.wants"
+            wants.mkdir(parents=True)
+
+            (system/"pacman-init.service").write_text("")
+            (system/"etc-pacman.d-gnupg.mount").write_text("")
+            (wants/"pacman-init.service").symlink_to("../pacman-init.service")
+
+            (up/"profiledef.sh").write_text(
+                "bootmodes=(bios.syslinux uefi.systemd-boot)" + chr(10)
+            )
+            (up/"pacman.conf").write_text(
+                "[options]" + chr(10) +
+                "SigLevel = Required DatabaseOptional" + chr(10)
+            )
+            (up/"packages.x86_64").write_text(
+                "base" + chr(10) + "linux" + chr(10)
+            )
+
+            repo=base/"repo"
+            repo.mkdir()
+            pkg=repo/"mapleos-core.pkg.tar.zst"
+            pkg.write_bytes(b"fixture-not-a-real-package")
+
+            out=base/"profile"
+            make_profile.make_profile(up,out,repo,pkg)
+
+            generated=out/"airootfs/etc/systemd/system"
+
+            self.assertTrue(
+                (generated/"pacman-init.service").is_file()
+            )
+            self.assertTrue(
+                (generated/"etc-pacman.d-gnupg.mount").is_file()
+            )
+
+            link=generated/"multi-user.target.wants/pacman-init.service"
+            self.assertTrue(link.is_symlink())
+            self.assertEqual(os.readlink(link), "../pacman-init.service")
+
     def test_changed_archiso_api_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             up=Path(td)/'up'; up.mkdir(); (up/'profiledef.sh').write_text('bootmodes=(unknown)')

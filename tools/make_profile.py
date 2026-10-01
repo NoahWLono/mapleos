@@ -23,13 +23,31 @@ def make_profile(upstream: Path, dest: Path, localrepo: Path, package: Path) -> 
         raise ValueError('Expected x86_64 BIOS and systemd-boot profile support')
     shutil.copytree(upstream,dest,symlinks=True)
     live=dest/'airootfs'
-    # Drop upstream root autologin/automated URL script hooks and network setup.
-    for relative in ['root','etc/systemd/system','etc/systemd/network','etc/ssh/sshd_config.d']:
+    # Drop upstream root autologin, networkd and SSH customizations, but retain
+    # ArchISO writable Pacman keyring initialization. Archinstall/pacstrap requires
+    # pacman-init.service and etc-pacman.d-gnupg.mount in the live environment.
+    for relative in ["root", "etc/systemd/network", "etc/ssh/sshd_config.d"]:
         path=live/relative
         if path.exists(): shutil.rmtree(path)
-    shutil.copytree(ROOT/'live',live,dirs_exist_ok=True)
-    (live/'root').mkdir(exist_ok=True,mode=0o750)
-    system=live/'etc/systemd/system'; system.mkdir(parents=True,exist_ok=True)
+
+    system=live/"etc/systemd/system"
+    if system.exists():
+        keep={"pacman-init.service", "etc-pacman.d-gnupg.mount"}
+        for child in list(system.iterdir()):
+            if child.name in keep:
+                continue
+            if child.is_dir() and not child.is_symlink():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+
+        wants=system/"multi-user.target.wants"
+        wants.mkdir(parents=True, exist_ok=True)
+        (wants/"pacman-init.service").symlink_to("../pacman-init.service")
+
+    shutil.copytree(ROOT/"live", live, dirs_exist_ok=True)
+    (live/"root").mkdir(exist_ok=True, mode=0o750)
+    system=live/"etc/systemd/system"; system.mkdir(parents=True, exist_ok=True)
     links={
         'multi-user.target.wants/NetworkManager.service':'/usr/lib/systemd/system/NetworkManager.service',
         'multi-user.target.wants/systemd-resolved.service':'/usr/lib/systemd/system/systemd-resolved.service',
